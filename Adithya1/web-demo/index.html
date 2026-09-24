@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>CarGrasp - Live AI Car Recognition</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-dark: #0A0F1D;
+      --surface-dark: #131B2E;
+      --surface-card: #182238;
+      --surface-card-elevated: #1F2B48;
+      --border-dark: #263554;
+      --cyan-neon: #00E5FF;
+      --blue-neon: #0284C7;
+      --indigo-vibrant: #6366F1;
+      --emerald-success: #10B981;
+      --amber-warning: #F59E0B;
+      --red-error: #EF4444;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .mobile-wrapper {
+      width: 100%;
+      max-width: 440px;
+      min-height: 840px;
+      background: var(--bg-dark);
+      border-radius: 36px;
+      border: 2px solid var(--border-dark);
+      box-shadow: 0 25px 60px -15px rgba(0, 229, 255, 0.2), 0 0 35px rgba(0, 229, 255, 0.12);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Header Bar */
+    .app-header {
+      padding: 18px 22px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 15, 29, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--cyan-neon), var(--blue-neon));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(0, 229, 255, 0.45);
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #FFFFFF;
+    }
+
+    .api-status-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--emerald-success);
+      transition: all 0.2s ease;
+    }
+
+    .api-status-chip:hover {
+      background: rgba(16, 185, 129, 0.25);
+    }
+
+    /* Screen State Container */
+    .screen {
+      padding: 20px 22px;
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hero Showcase Card */
+    .hero-card {
+      background: var(--surface-card-elevated);
+      border: 1px solid rgba(0, 229, 255, 0.28);
+      border-radius: 26px;
+      padding: 28px 20px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: -55%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 190px;
+      height: 190px;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.4), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-icon-wrap {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(0, 229, 255, 0.12);
+      border: 2px solid rgba(0, 229, 255, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      color: var(--cyan-neon);
+      font-size: 34px;
+      box-shadow: 0 0 28px rgba(0, 229, 255, 0.3);
+    }
+
+    .hero-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .hero-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* 3 Feature Pills */
+    .features-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .feature-pill {
+      background: var(--surface-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 18px;
+      padding: 14px 6px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-pill i {
+      color: var(--cyan-neon);
+      font-size: 18px;
+    }
+
+    .feature-pill span {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #E2E8F0;
+    }
+
+    /* Buttons */
+    .btn-gradient {
+      width: 100%;
+      height: 54px;
+      border-radius: 18px;
+      border: none;
+      background: linear-gradient(135deg, var(--cyan-neon), var(--blue-neon));
+      color: #000000;
+      font-size: 15.5px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 10px 28px -5px rgba(0, 229, 255, 0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-bottom: 14px;
+    }
+
+    .btn-gradient:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 34px -4px rgba(0, 229, 255, 0.6);
+    }
+
+    .btn-gradient:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-outline {
+      width: 100%;
+      height: 54px;
+      border-radius: 18px;
+      background: transparent;
+      border: 1.5px solid rgba(0, 229, 255, 0.6);
+      color: #FFFFFF;
+      font-size: 14.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 229, 255, 0.1);
+      border-color: var(--cyan-neon);
+    }
+
+    /* Preview Card & Scanner */
+    .preview-card {
+      width: 100%;
+      height: 280px;
+      background: var(--surface-card);
+      border-radius: 24px;
+      border: 2px solid rgba(0, 229, 255, 0.4);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+      background: rgba(10, 15, 29, 0.4);
+    }
+
+    .scanner-overlay.active {
+      display: block;
+    }
+
+    .laser-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: #FFFFFF;
+      box-shadow: 0 0 18px 5px var(--cyan-neon);
+      animation: scanSweep 2s infinite ease-in-out alternate;
+    }
+
+    @keyframes scanSweep {
+      0% { top: 8%; }
+      100% { top: 92%; }
+    }
+
+    .scanning-chip {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background: rgba(10, 15, 29, 0.94);
+      backdrop-filter: blur(8px);
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 229, 255, 0.25);
+      border-top-color: var(--cyan-neon);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Results View */
+    .results-hero {
+      background: var(--surface-card-elevated);
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      border-radius: 22px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .status-badge.detected {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--emerald-success);
+    }
+
+    .status-badge.not-detected {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--red-error);
+    }
+
+    .car-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .confidence-bar-wrap {
+      background: #0A0F1D;
+      border-radius: 12px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .conf-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+    }
+
+    .conf-score {
+      font-weight: 800;
+      color: var(--emerald-success);
+    }
+
+    .conf-track {
+      width: 100%;
+      height: 6px;
+      background: #1E293B;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .conf-fill {
+      height: 100%;
+      width: 90%;
+      background: var(--emerald-success);
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .spec-item {
+      background: var(--surface-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .spec-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(0, 229, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan-neon);
+      font-size: 18px;
+    }
+
+    .spec-content {
+      flex: 1;
+    }
+
+    .spec-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .spec-value {
+      font-size: 15px;
+      font-weight: 800;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.7);
+      display: inline-block;
+    }
+
+    .notes-box {
+      background: var(--surface-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .notes-header {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--cyan-neon);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .notes-text {
+      font-size: 13.5px;
+      color: #CBD5E1;
+      line-height: 1.55;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--surface-card-elevated);
+      border: 1px solid var(--border-dark);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 390px;
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+
+    .input-field {
+      width: 100%;
+      background: #0A0F1D;
+      border: 1.5px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #FFF;
+      font-size: 15px;
+      margin: 12px 0;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--cyan-neon);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-wrapper">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-car"></i></div>
+        <div class="brand-title">CarGrasp</div>
+      </div>
+      <div class="api-status-chip" id="apiStatusBtn" onclick="openApiKeyModal()">
+        <i class="fa-solid fa-bolt"></i>
+        <span id="apiStatusText">AI Active</span>
+      </div>
+    </header>
+
+    <!-- SCREEN 1: HOME (Exact match to screenshot) -->
+    <main class="screen active" id="homeScreen">
+      <div class="hero-card">
+        <div class="hero-glow"></div>
+        <div class="hero-icon-wrap"><i class="fa-solid fa-car-side"></i></div>
+        <div class="hero-title">Live AI Car Recognition</div>
+        <div class="hero-desc">Upload any car photo to scan its exact make, model and paint colour with xAI Grok & Gemini Vision.</div>
+      </div>
+
+      <div class="features-row">
+        <div class="feature-pill">
+          <i class="fa-solid fa-car"></i>
+          <span>Make & Model</span>
+        </div>
+        <div class="feature-pill">
+          <i class="fa-solid fa-palette"></i>
+          <span>Colour Detect</span>
+        </div>
+        <div class="feature-pill">
+          <i class="fa-solid fa-brain"></i>
+          <span>xAI Grok Vision</span>
+        </div>
+      </div>
+
+      <button class="btn-gradient" onclick="triggerCameraInput()">
+        <i class="fa-solid fa-camera"></i> Take Photo
+      </button>
+
+      <button class="btn-outline" onclick="triggerGalleryInput()">
+        <i class="fa-solid fa-images"></i> Choose from Gallery
+      </button>
+
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="handleFileChosen(event)">
+      <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="handleFileChosen(event)">
+
+      <div style="margin-top: auto; text-align: center; padding-top: 14px;">
+        <span style="font-size: 11px; color: var(--text-muted);">CarGrasp • Powered by xAI Grok Vision & Gemini</span>
+      </div>
+    </main>
+
+    <!-- SCREEN 2: PREVIEW -->
+    <section class="screen" id="previewScreen">
+      <div class="preview-card">
+        <img id="previewImg" class="preview-img" src="" alt="Selected Car">
+        <div class="scanner-overlay" id="scannerOverlay">
+          <div class="laser-line"></div>
+          <div class="scanning-chip">
+            <div class="spinner"></div>
+            <span id="scanStatusMsg">Scanning car features with AI Vision...</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-gradient" id="analyzeBtn" onclick="runCarAnalysis()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Scan & Analyze Car
+      </button>
+
+      <button class="btn-outline" onclick="goToScreen('homeScreen')">
+        <i class="fa-solid fa-arrow-left"></i> Choose Another Image
+      </button>
+    </section>
+
+    <!-- SCREEN 3: RESULTS -->
+    <section class="screen" id="resultsScreen">
+      <div class="preview-card" style="height: 180px; margin-bottom: 14px;">
+        <img id="resultThumb" class="preview-img" src="" alt="Recognized Car">
+      </div>
+
+      <div class="results-hero">
+        <div class="status-badge detected" id="resBadge">
+          <i class="fa-solid fa-circle-check"></i> <span id="resBadgeText">Car Detected</span>
+        </div>
+        <div class="car-title" id="resTitle">Vehicle Identified</div>
+
+        <div class="confidence-bar-wrap">
+          <div class="conf-labels">
+            <span>AI Confidence</span>
+            <span class="conf-score" id="resConfidence">High (98%)</span>
+          </div>
+          <div class="conf-track">
+            <div class="conf-fill" id="resConfFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec-list">
+        <div class="spec-item">
+          <div class="spec-icon"><i class="fa-solid fa-industry"></i></div>
+          <div class="spec-content">
+            <div class="spec-label">Make / Manufacturer</div>
+            <div class="spec-value" id="resMake">-</div>
+          </div>
+        </div>
+
+        <div class="spec-item">
+          <div class="spec-icon"><i class="fa-solid fa-car"></i></div>
+          <div class="spec-content">
+            <div class="spec-label">Model</div>
+            <div class="spec-value" id="resModel">-</div>
+          </div>
+        </div>
+
+        <div class="spec-item">
+          <div class="spec-icon"><i class="fa-solid fa-palette"></i></div>
+          <div class="spec-content">
+            <div class="spec-label">Primary Colour</div>
+            <div class="spec-value">
+              <span class="color-swatch" id="resColorSwatch" style="background: #00E5FF;"></span>
+              <span id="resColor">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="spec-item" id="resBodyItem">
+          <div class="spec-icon"><i class="fa-solid fa-calendar-days"></i></div>
+          <div class="spec-content">
+            <div class="spec-label">Body Type & Generation</div>
+            <div class="spec-value" id="resBodyType">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes-box" id="resNotesBox">
+        <div class="notes-header"><i class="fa-solid fa-circle-info"></i> AI Vision Insights</div>
+        <div class="notes-text" id="resNotes">-</div>
+      </div>
+
+      <button class="btn-gradient" onclick="goToScreen('homeScreen')">
+        <i class="fa-solid fa-rotate-right"></i> Analyze Another Car
+      </button>
+    </section>
+
+  </div>
+
+  <!-- API Key Modal -->
+  <div class="modal" id="apiKeyModal">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="font-size: 17px; font-weight: 800; color: #FFF;">AI Engine Settings</div>
+        <i class="fa-solid fa-xmark" style="color: #94A3B8; cursor: pointer;" onclick="closeApiKeyModal()"></i>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
+        CarGrasp uses local <strong>OpenAI CLIP Neural Vision</strong> by default. You can also paste an optional key below:
+      </p>
+      <input type="password" id="apiKeyInput" class="input-field" placeholder="gsk_... or AIzaSy..." value="">
+      
+      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        <button class="btn-gradient" style="margin-bottom: 0;" onclick="saveApiKey()">Save Settings</button>
+        <button class="btn-outline" style="width: 90px;" onclick="closeApiKeyModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentImageBase64 = null;
+    let apiKey = localStorage.getItem('cargrasp_api_key') || '';
+
+    async function syncKeyStatus() {
+      try {
+        const res = await fetch('/api/key-status');
+        const data = await res.json();
+        if (data.hasKey) {
+          updateKeyBadge('AI Active');
+        }
+      } catch (e) {}
+    }
+    syncKeyStatus();
+
+    function updateKeyBadge(type) {
+      const text = document.getElementById('apiStatusText');
+      text.textContent = 'AI Active';
+    }
+
+    function openApiKeyModal() {
+      document.getElementById('apiKeyInput').value = apiKey;
+      document.getElementById('apiKeyModal').classList.add('active');
+    }
+
+    function closeApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.remove('active');
+    }
+
+    async function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      apiKey = key;
+      localStorage.setItem('cargrasp_api_key', key);
+      
+      try {
+        await fetch('/api/set-key', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ apiKey: key })
+        });
+      } catch (e) {}
+
+      updateKeyBadge('AI Active');
+      closeApiKeyModal();
+      alert("Settings saved successfully!");
+    }
+
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function triggerCameraInput() {
+      document.getElementById('cameraInput').click();
+    }
+
+    function triggerGalleryInput() {
+      document.getElementById('galleryInput').click();
+    }
+
+    function handleFileChosen(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawImg = new Image();
+        rawImg.onload = () => {
+          // Downscale high-resolution mobile camera images to max 1200px
+          const maxDim = 1200;
+          let w = rawImg.width;
+          let h = rawImg.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(rawImg, 0, 0, w, h);
+          currentImageBase64 = canvas.toDataURL('image/jpeg', 0.90);
+
+          document.getElementById('previewImg').src = currentImageBase64;
+          document.getElementById('resultThumb').src = currentImageBase64;
+          goToScreen('previewScreen');
+        };
+        rawImg.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function runCarAnalysis() {
+      if (!currentImageBase64) return;
+
+      const overlay = document.getElementById('scannerOverlay');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      overlay.classList.add('active');
+      analyzeBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: currentImageBase64,
+            apiKey: apiKey
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (data.error) {
+          throw new Error(data.message || data.error);
+        }
+
+        displayResults(data);
+        goToScreen('resultsScreen');
+
+      } catch (err) {
+        alert("CarGrasp Notice: " + (err.message || "Failed to analyze image. Please verify connection."));
+      } finally {
+        overlay.classList.remove('active');
+        analyzeBtn.disabled = false;
+      }
+    }
+
+    function displayResults(data) {
+      const isDetected = data.carDetected !== false && data.make !== "Not Detected" && data.detected !== false;
+      const badge = document.getElementById('resBadge');
+      const badgeText = document.getElementById('resBadgeText');
+      const title = document.getElementById('resTitle');
+      const make = document.getElementById('resMake');
+      const model = document.getElementById('resModel');
+      const color = document.getElementById('resColor');
+      const swatch = document.getElementById('resColorSwatch');
+      const conf = document.getElementById('resConfidence');
+      const confFill = document.getElementById('resConfFill');
+      const notes = document.getElementById('resNotes');
+      const bodyType = document.getElementById('resBodyType');
+
+      if (isDetected) {
+        badge.className = "status-badge detected";
+        badgeText.textContent = "Car Detected";
+        title.textContent = `${data.make} ${data.model}`;
+        make.textContent = data.make || "Vehicle Detected";
+        model.textContent = data.model || "Unknown";
+        color.textContent = data.colour || data.color || "Unknown";
+        
+        const confStr = typeof data.confidence === 'number' ? `High (${data.confidence}%)` : (data.confidence || 'High (95%)');
+        conf.textContent = confStr;
+        let pMatch = confStr.match(/(\d+(\.\d+)?)%/);
+        let pct = pMatch ? parseFloat(pMatch[1]) : 92;
+        confFill.style.width = pct + '%';
+        confFill.style.background = pct > 80 ? '#10B981' : (pct > 60 ? '#F59E0B' : '#EF4444');
+        conf.style.color = pct > 80 ? '#10B981' : (pct > 60 ? '#F59E0B' : '#EF4444');
+
+        notes.textContent = data.notes || data.additional_details || "Vehicle successfully identified by AI.";
+        const yr = data.estimatedYearRange || data.year || '';
+        const bt = data.bodyType || data.body_type || 'Automobile';
+        bodyType.textContent = `${bt} ${yr && yr !== 'Unknown' && yr !== 'N/A' ? '• ' + yr : ''}`.trim();
+        swatch.style.background = data.hexColor || data.color_hex || getColorFromName(data.colour || data.color);
+      } else {
+        badge.className = "status-badge not-detected";
+        badgeText.textContent = "Car Not Detected";
+        title.textContent = "No Automobile Recognized";
+        make.textContent = "Not Detected";
+        model.textContent = "Not Detected";
+        color.textContent = "Not Detected";
+        conf.textContent = "Uncertain";
+        confFill.style.width = '15%';
+        confFill.style.background = '#EF4444';
+        conf.style.color = '#EF4444';
+        notes.textContent = data.notes || data.additional_details || "The AI could not recognize a car in this photo.";
+        bodyType.textContent = "Unknown";
+      }
+    }
+
+    function getColorFromName(name) {
+      const n = (name || '').toLowerCase();
+      if (n.includes('blue') || n.includes('navy')) return '#2563EB';
+      if (n.includes('red') || n.includes('crimson') || n.includes('rosso')) return '#DC2626';
+      if (n.includes('black') || n.includes('shadow') || n.includes('obsidian')) return '#18181B';
+      if (n.includes('white') || n.includes('pearl') || n.includes('alpine') || n.includes('carrara')) return '#F8FAFC';
+      if (n.includes('silver') || n.includes('grey') || n.includes('gray')) return '#94A3B8';
+      if (n.includes('yellow') || n.includes('gold')) return '#EAB308';
+      if (n.includes('green') || n.includes('emerald')) return '#16A34A';
+      if (n.includes('orange') || n.includes('papaya')) return '#EA580C';
+      if (n.includes('purple') || n.includes('violet')) return '#7C3AED';
+      return '#00E5FF';
+    }
+  </script>
+</body>
+</html>

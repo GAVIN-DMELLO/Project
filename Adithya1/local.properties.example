@@ -1,0 +1,10 @@
+## Location of the SDK. This is only used by Gradle.
+# sdk.dir=C\:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk
+
+# xAI Grok Vision API Key (Recommended)
+# Get your API key at https://console.x.ai
+GROK_API_KEY=xai-YOUR_XAI_GROK_API_KEY_HERE
+
+# Or Google Gemini API Key
+# Get your free key at https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=AIzaSyYOUR_GEMINI_API_KEY_HERE
